@@ -47,6 +47,7 @@ public class Main {
 
     static TuringMachine tm;
 
+
     static void menu() throws IOException {
         System.out.print(
                 "The Turing Machine Simulator\n" +
@@ -78,6 +79,15 @@ public class Main {
 
         System.out.println("‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾");
 
+        transitionsMenu();
+
+        System.out.println("‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾");
+
+        inputStringMenu();
+
+    }
+
+    static void transitionsMenu() throws IOException {
         tm.numOfTransitions = tm.numOfStates * (tm.numOfMachineAlphabet + tm.numOfAlphabet);
         tm.transitions = new char[tm.numOfTransitions][5];
         System.out.println(
@@ -98,9 +108,9 @@ public class Main {
             System.out.println("Transition " + (i + 1) + ": (s" + tm.transitions[i][0] + ", " + tm.transitions[i][1] +
                     ") , (s" + tm.transitions[i][2] + ", " + tm.transitions[i][3] + ", " + tm.transitions[i][4] + ")");
         }
+    }
 
-        System.out.println("‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾");
-
+    static void inputStringMenu() throws IOException {
         System.out.print("Enter String: ");
         tm.tape = reader.readLine().replaceAll("\\s+", "").toCharArray();
         System.out.print("Enter initial position of the head: ");
@@ -108,16 +118,60 @@ public class Main {
 
         System.out.println("‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾");
 
+        System.out.println("Tape (^^^ is the current head position): ");
         printTape();
 
         System.out.println("‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾");
 
         // start the simulation
-        //simulate();
+        System.out.println("Simulation started...");
+        simulate();
+    }
+
+    static int findNextStateIndex(char currentState, char input) {
+        for (int i = 0; i < tm.numOfTransitions; i++) {
+            if (tm.transitions[i][0] == currentState && tm.transitions[i][1] == input) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    static void simulate() {
+        printTape();
+        int index = 0;
+        while (true) {
+            char nextState = tm.transitions[index][2];
+            char output = tm.transitions[index][3];
+            char action = tm.transitions[index][4];
+
+            switch (action) {
+                case 'L':
+                    tm.tape[tm.head] = output;
+                    tm.head--;
+                    index = findNextStateIndex(nextState, tm.tape[tm.head]);
+                    printTape();
+                    break;
+                case 'R':
+                    tm.tape[tm.head] = output;
+                    tm.head++;
+                    index = findNextStateIndex(nextState, tm.tape[tm.head]);
+                    printTape();
+                    break;
+                case 'N':
+                    printTape();
+                    System.out.println("String is rejected\n");
+                    return;
+                case 'Y':
+                    printTape();
+                    System.out.println("String is accepted\n");
+                    return;
+            }
+        }
     }
 
     static void printTape() {
-        System.out.println("\nThe Tape (^^^ is the current head position):");
+        System.out.println("\nTape:");
         for (int i = 0; i <= tm.tape.length; i++) {
             System.out.print("____");
         }
@@ -129,7 +183,7 @@ public class Main {
         }
         System.out.println("|");
         for (int i = 0; i <= tm.tape.length; i++) {
-            if (i == tm.head)
+            if (i == tm.head + 1)
                 System.out.print("‾^^^‾");
             else
                 System.out.print("‾‾‾‾");
@@ -143,9 +197,10 @@ public class Main {
         input = new Scanner(System.in);
         reader = new BufferedReader(new InputStreamReader(System.in));
         tm = new TuringMachine();
+        char choice;
 
         System.out.println(
-                        "‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\n" +
+                "‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\n" +
                         "The Turing Machine Formal Definition\n" +
                         "    A Turing Machine is a 5-tuple (K, Σ, Γ, s, σ), where\n" +
                         "        K is a finite set of states, not including the halt state h.\n" +
@@ -164,7 +219,43 @@ public class Main {
         do {
             menu();
 
-            System.out.println("Do you want to continue? (y/n)");
-        } while (reader.readLine().equals("y"));
+            do {
+                System.out.println(
+                        "1. New Turing Machine\n" +
+                                "2. Modify current Turing Machine\n" +
+                                "3. Exit\n");
+
+                choice = reader.readLine().charAt(0);
+
+                if (choice == '1') {
+                    tm = new TuringMachine();
+                    break;
+                } else if (choice == '2') {
+                    System.out.println(
+                            "1. Modify input string\n" +
+                            "2. Modify transitions\n" +
+                            "3. Modify initial position of the head\n" +
+                            "4. Modify input string and transitions\n"
+                    );
+                    choice = reader.readLine().charAt(0);
+
+                    if (choice == '1') {
+                        inputStringMenu();
+                    } else if (choice == '2') {
+                        transitionsMenu();
+                        System.out.print("Enter initial position of the head on the previous string " + Arrays.toString(tm.tape) + ": ");
+                        tm.head = input.nextInt();
+                        simulate();
+                    } else if (choice == '3') {
+                        System.out.print("Enter initial position of the head on the previous string " + Arrays.toString(tm.tape) + ": ");
+                        tm.head = input.nextInt();
+                        simulate();
+                    } else if (choice == '4') {
+                        transitionsMenu();
+                        inputStringMenu();
+                    }
+                }
+            } while (!(choice == '3'));
+        } while (!(choice == '3'));
     }
 }
