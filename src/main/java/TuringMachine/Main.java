@@ -8,11 +8,9 @@ import java.util.Scanner;
 import java.util.logging.Logger;
 
 public class Main {
-
     static BufferedReader reader;
     static Scanner input;
     static TuringMachine tm;
-
 
     // A Turing Machine Class that acts as a Struct in other programming languages
     public static class TuringMachine {
@@ -41,8 +39,8 @@ public class Main {
         String[] MachineAlphabet;
 
         String initialState;
-        String blankSymbol;
 
+        char blankSymbol;
         char[] tape;
         char[][] transitions;
     }
@@ -69,14 +67,29 @@ public class Main {
 
         System.out.println("‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾");
 
+        System.out.print("Enter the Blank symbol: ");
+        tm.blankSymbol = reader.readLine().charAt(0);
+
+        System.out.println("‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾");
+
         System.out.print("Enter number of Machine alphabet |Γ|: ");
         tm.numOfMachineAlphabet = input.nextInt();
 
-        tm.MachineAlphabet = new String[tm.numOfMachineAlphabet];
-        for (int i = 0; i < tm.numOfMachineAlphabet; i++) {
+        tm.MachineAlphabet = new String[tm.numOfMachineAlphabet + 1];
+        tm.MachineAlphabet[0] = String.valueOf(tm.blankSymbol);
+        for (int i = 0; i < tm.numOfMachineAlphabet - 1; i++) {
             System.out.print("Enter the " + (i + 1) + "th alphabet: ");
-            tm.MachineAlphabet[i] = String.valueOf(reader.readLine().charAt(0));
+            char symbol = reader.readLine().charAt(0);
+            if (symbol == tm.blankSymbol) {
+                System.out.println("The blank symbol is already defined as a string alphabet");
+                System.out.println("Please enter another symbol");
+                i--;
+            } else {
+                tm.MachineAlphabet[i] = String.valueOf(symbol);
+            }
         }
+        // Increasing the number of Machine Alphabet by 1 to include the blank symbol
+        tm.numOfMachineAlphabet++;
 
         System.out.println("‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾");
 
@@ -118,7 +131,7 @@ public class Main {
                                 "\tformat: <state> <input> <next_state> <output> <action>\n" +
                                 "\tactions: L: Left, R: Right, N: Reject, Y: Accept\n" +
                                 "\tExample: to enter this transition: (s0, a) -> (s1, b, R)\n" +
-                                "\tenter this format: 0 a 1 b R"
+                                "\tenter any of those formats: (0 - a - 1 - b - R) or (0 a 1 b R) or (0a1bR)\n"
                 );
 
                 int counterY = 0;
@@ -126,7 +139,7 @@ public class Main {
 
                 for (int i = 0; i < (tm.numOfTransitions); i++) {
                     System.out.println("Enter the " + (i + 1) + "th transition: ");
-                    tm.transitions[i] = reader.readLine().replaceAll("\\s+", "").toCharArray();
+                    tm.transitions[i] = reader.readLine().replaceAll("\\s+", "").replaceAll("-", "").toCharArray();
                     if (tm.transitions[i][4] == 'Y') {
                         counterY++;
                     } else if (tm.transitions[i][4] == 'N') {
@@ -187,7 +200,12 @@ public class Main {
 
     static void inputStringMenu() throws IOException, InterruptedException {
         System.out.print("Enter String: ");
-        tm.tape = reader.readLine().replaceAll("\\s+", "").toCharArray();
+        StringBuilder tempTape = new StringBuilder(reader.readLine().replaceAll("\\s+", ""));
+        tempTape.append(tm.blankSymbol);
+        tempTape.append(tm.blankSymbol);
+        tempTape.append(tm.blankSymbol);
+
+        tm.tape = tempTape.toString().toCharArray();
         System.out.print("Enter initial position of the head: ");
         tm.head = input.nextInt();
 
@@ -223,6 +241,9 @@ public class Main {
 
     static void simulate() throws InterruptedException {
         try {
+            System.out.println("Enter the speed of the simulation (seconds): ");
+            int speed = input.nextInt();
+
             printTape();
             int index = 0;
             while (true) {
@@ -244,19 +265,19 @@ public class Main {
                         printTape();
                         break;
                     case 'N':
-                        System.out.println("Final String: ");
+                        System.out.println("Final String: " + String.valueOf(tm.tape));
                         printTape();
                         System.out.println("Location of head: " + tm.head);
                         System.out.println("String is rejected\n");
                         return;
                     case 'Y':
-                        System.out.println("Final String: ");
+                        System.out.println("\n\n\nFinal String: " + String.valueOf(tm.tape).substring(0, tm.tape.length - 3));
                         printTape();
                         System.out.println("Location of head: " + tm.head);
                         System.out.println("String is accepted\n");
                         return;
                 }
-                Thread.sleep(500);
+                Thread.sleep(speed * 1000);
             }
         } catch (Exception e) {
             System.out.println("Final String: ");
@@ -302,23 +323,26 @@ public class Main {
 
     static void printTape() {
         System.out.println("\nTape:");
-        for (int i = 0; i <= tm.tape.length; i++) {
+        for (int i = 0; i <= tm.tape.length + 2; i++) {
             System.out.print("____");
         }
         System.out.println("_");
 
         System.out.print("| < ");
-        for (int i = 0; i < tm.tape.length; i++) {
+        for (int i = 0; i < tm.tape.length + 1; i++) {
+            if (i == tm.tape.length) {
+                System.out.println("| .......");
+            } else
             System.out.print("| " + tm.tape[i] + " ");
         }
-        System.out.println("|");
-        for (int i = 0; i <= tm.tape.length; i++) {
+        for (int i = 0; i <= tm.tape.length + 2; i++) {
             if (i == tm.head + 1)
                 System.out.print("‾^^^‾");
             else
                 System.out.print("‾‾‾‾");
         }
         System.out.println();
+
     }
 
 
